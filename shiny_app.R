@@ -38,12 +38,10 @@ ui <- fluidPage(theme=my_theme,
                   "Groundwater California", # Title
                   
                   tabPanel("Home",fluid = TRUE, icon = icon("home"),
-                           
+                           titlePanel(h2("California Groundwater Contamination", align = "center")),
                            fluidRow(column(br(),
                                            br(),
-                                           br(),
                                            tags$img(src="GAMAlogo.png",width="170"),
-                                           br(),
                                            br(),
                                            br(),
                                            tags$img(src="WBlogo.png",width="170"),align = "center", width = 3),
@@ -51,7 +49,7 @@ ui <- fluidPage(theme=my_theme,
                                     column(
                                       p("California faces immense challenges as local groundwater users work to adhere to the mandates of the Sustainable Groundwater Management Act (SGMA) by the 2040s. With pumping reductions and land fallowing looming, many local government agencies and other stakeholders have to grapple with the increasing demands for water combined with climate change induced droughts and declining recharge rates.
 In addition to issues of scarcity, increased demand for agricultural goods has led to a variety of pollutants contaminating California’s water supply. Among these, nitrate, potassium, and phosphate have had detrimental effects on groundwater across the state. These effluents can cause eutrophication in downstream systems, leading to algal blooms and decreased oxygen levels. 
-To attempt to mitigate contamination, California sets standards for Maximum Contaminant Levels (MCLs) for these chemicals. This application aims to evaluate these threats facing California’s water supply. Through interactive maps, graphs, and other visualizations, this interface allows users to better understand the complex issues surrounding California water quality and scarcity.",
+To mitigate contamination, California sets standards for Maximum Contaminant Levels (MCLs) for these chemicals. This application aims to evaluate these threats facing California’s water supply. Through interactive maps, graphs, and other visualizations, this interface allows users to better understand the complex issues surrounding California water quality and scarcity.",
                                         style="text-align:justify;align:center;color:black;background-color:white;padding:15px;border-radius:10px"),
                                       tags$img(src="image.png",
                                                width="90%"),
@@ -63,7 +61,6 @@ To attempt to mitigate contamination, California sets standards for Maximum Cont
                                       width=6, align = "center"),
                                     
                                     column(br(),
-                                           br(),
                                            br(),
                                            br(),
                                            tags$img(src="CAlogo.png",width="200"),
@@ -178,7 +175,8 @@ server <- function(input,output) {
       geom_area( fill="#69b3a2", alpha=0.4) +
       geom_line(color="#69b3a2", size=1) +
       geom_point(size=1, color="#69b3a2") +
-      labs(y ="mg/l", x = "Years")
+      labs(y ="mg/l", x = "Years") +
+      theme_minimal()
   ) # end output$gw_plot
   
 ## Map 
@@ -194,6 +192,7 @@ server <- function(input,output) {
       geom_polygon(aes(fill=mean_gm_result)) +
       coord_fixed(ratio = 1) +
       scale_fill_continuous("mg/l",trans = 'reverse') +
+      scale_fill_gradient(low = "#FBC7D4", high = "#9796F0") +
       theme(axis.line=element_blank(),
             axis.text.x=element_blank(),
             axis.text.y=element_blank(),
