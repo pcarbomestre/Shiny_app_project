@@ -10,7 +10,7 @@ library(bslib)
 # Data input
 # ----------------------
 ## Time series data
-df <- read_csv(here("data","filtered_data.csv"), col_names = TRUE)
+df <- read_csv(here("data","filtered_data_2000_2020.csv"), col_names = TRUE)
 
 ## Map data
 map <- us_map("counties",
