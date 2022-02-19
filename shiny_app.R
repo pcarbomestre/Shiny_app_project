@@ -85,7 +85,7 @@ tabPanel("Temporal series",fluid = TRUE, icon = icon("chart-area"),
              p("This tool explores groundwater contaminants across California counties. 
                                The interface allows the user to select the relevant contaminant and the county of interest. 
                                The resulting figure explores monthly averages of the selected contaminant throughout time given the selected constraints.",
-               style="text-align:justify;color:black;background-color:gainsboro;padding:15px;border-radius:5px"),
+               style="text-align:justify;color:black;padding:15px;border-radius:5px; width: 1250px; align: center"),
              width=4)
          ),
          sidebarLayout(
@@ -124,11 +124,9 @@ tabPanel("Temporal series",fluid = TRUE, icon = icon("chart-area"),
 
 tabPanel("California Map",fluid = TRUE, icon = icon("map"),
          fluidRow(
-           column(
              p("This tool explores annual contaminant averages across California counties. 
                                  The interface allows users to select the year of interest, and the resulting chloropleth map shows contaminant concentration across time throughout California.",
-               style="text-align:justify;color:black;background-color:gainsboro;padding:15px;border-radius:5px"),
-             width=4)
+               style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250")
          ),
          sidebarLayout(
            sidebarPanel(
@@ -174,8 +172,8 @@ server <- function(input,output) {
   output$gw_plot <- renderPlot(
     ggplot(data=gw_reactive(),aes(x=date,y=mean_gm_result)) +
       geom_area( fill="#FBC7D4", alpha=0.4) +
-      geom_line(color="#ff7f50", size=1.5) +
-      geom_point(size=2, color="#ff7f50") +
+      geom_line(color="#f6809d", size=1) +
+      geom_point(size=1, color="#f6809d") +
       labs(y ="mg/l", x = "Years") +
       theme_minimal()
   ) # end output$gw_plot
