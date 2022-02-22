@@ -5,12 +5,13 @@ library(here)
 library(usmap)
 library(plotly)
 library(bslib)
+library(kableExtra)
 
 
 # Data input
 # ----------------------
 ## Time series data
-df <- read_csv(here("data","filtered_data_2000_2020.csv"), col_names = TRUE)
+df <- read_csv(here("data","filtered_data_2000_2020.csv"), col_names = TRUE) 
 
 ## Map data
 map <- us_map("counties",
@@ -55,6 +56,10 @@ tags$img(src="image.png",
          width="90%"),
 br(),
 br(),
+p("Data Citations: 
+  \n
+  California State Water Resources Control Board, Ground Water - Water Quality Results (2022). Open Data Portal.",
+  style="text-align:center;color:black"),
 p("For more information please check the",em("GAMA Groundwater information system"),"page clicking",
   a(href="https://data.ca.gov/dataset/ground-water-water-quality-results/resource/be2d189b-dcb7-4c1c-b881-a52b278cf0a7", "HERE",target="_blank"),
   style="text-align:center;color:black"),
@@ -142,8 +147,8 @@ tabPanel("California Map",fluid = TRUE, icon = icon("map"),
                          label = "Time range",
                          min = min(mapdata$year),
                          max = max(mapdata$year),
-                         value = min(mapdata$year),
-                         animate=T
+                         value = c(min(mapdata$year), max(mapdata$year)), # how do we make this show up without columns???
+                         animate = T
              ) # End sliderInput
              
            ), # End of sidebarPanel
@@ -165,38 +170,33 @@ tabPanel("Contaminant Statistics", fluid = T, icon = icon("stats"),
              "What do you want to represent?",
              br(),
              hr(),
-             selectInput(inputId = "pick_pollutant",
-                         label = "Select pollutant",
-                         choices = unique(df$gm_chemical_name),
-                         selected = "50 Free"
-             ), # End selectInput
-             
              selectInput(inputId = "pick_county",
                          label = "Select County",
                          choices = unique(df$gm_gis_county),
                          selected = "50 Free"
              ), # End selectInput
              
-             sliderInput(inputId = "pick_range",
-                         label = "Time range",
-                         min = min(df$date),
-                         max = max(df$date),
-                         value = c(min(df$date),max(df$date)),
-                         timeFormat = "%m/%Y",
-                         ticks = F
-             ) # End sliderInput
+             selectInput(inputId = "pick_year", 
+                         label = ("Select Year"), 
+                         choices = list("Year" = c(min(df$year):max(df$year))),
+                         selected = 1),
+             
+             hr(),
+             fluidRow(column(3, verbatimTextOutput("value"))
+                      ) # end selectInput fpr year
+             
            ), # End of sidebarPanel
            mainPanel(
              column(
                "California Contaminant Statistics",
-               plotOutput(outputId = "stats", width = "150%"), width = 8)
+               tableOutput(outputId ="gw_stat"), width = 8
            ) # End of mainPanel
          ) # End of sidebarLayout
-), # End of tabPanel statistics
+) # End of tabPanel statistics
 
-           ), # End of tabPanel
-           ) #end of navbarPage
-         ) # end of ui
+) # End of tabPanel
+) #end of navbarPage
+)
 
 
 server <- function(input,output) {
@@ -215,7 +215,8 @@ server <- function(input,output) {
       geom_line(color="#f6809d", size=1) +
       geom_point(size=1, color="#f6809d") +
       labs(y ="mg/l", x = "Years") +
-      theme_minimal()
+      theme_minimal() +
+      labs(caption = "Data from CA State Water Resources Control Board.")
   ) # end output$gw_plot
   
   ## Map 
@@ -232,6 +233,7 @@ server <- function(input,output) {
       coord_fixed(ratio = 1) +
       scale_fill_continuous("mg/l",trans = 'reverse') +
       scale_fill_gradient(low = "#FBC7D4", high = "#9796F0") +
+      labs(caption = "Data from CA State Water Resources Control Board.") +
       theme(axis.line=element_blank(),
             axis.text.x=element_blank(),
             axis.text.y=element_blank(),
@@ -247,6 +249,26 @@ server <- function(input,output) {
   
   ) # end output$gw_map
   
+## statistic table
+  ### the ui and reactives aren't interacting :/
+ca_stat <- reactive({
+  df1 %>%
+    filter(gm_gis_county == input$pick_county,
+           year == input$pick_year)
+  }) # end ca_stat reactive
+
+  output$gw_stat <- renderTable({
+    ca_stat() %>% 
+      group_by(gm_gis_county, year) %>% 
+      summarise(mean_gm_result)
+    # %>% 
+    #   kable("html")%>% 
+    #   kable_styling(
+    #     full_width = F,
+    #     bootstrap_options = c("striped", "hover", "condensed")
+    #   )
+  }) ### end gw_stat
+
 }
 
 shinyApp(ui=ui, server=server)
