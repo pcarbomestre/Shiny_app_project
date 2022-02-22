@@ -11,7 +11,11 @@ library(kableExtra)
 # Data input
 # ----------------------
 ## Time series data
-df <- read_csv(here("data","filtered_data_2000_2020.csv"), col_names = TRUE) 
+df <- read_csv(here("data","filtered_data_2000_2020.csv"), col_names = TRUE) %>% 
+  mutate(gm_chemical_name = case_when(
+    gm_chemical_name == "Bicarbonate Alkalinity (mg/l)" ~ "Bicarbonate Alkalinity",
+    gm_chemical_name == "Potassium (mg/l)"  ~ "Potassium",
+    gm_chemical_name == "Nitrate as N (mg/l)" ~ "Nitrate"))
 
 ## Map data
 map <- us_map("counties",
@@ -21,9 +25,9 @@ map <- us_map("counties",
 df1 <- df %>% 
   mutate(county = str_to_title(gm_gis_county), .keep="unused") %>% 
   group_by(county, gm_chemical_name, year) %>% 
-  summarise(mean_gm_result=mean(mean_gm_result))
+  summarise(mean_gm_result=mean(mean_gm_result)) 
 
-mapdata <- left_join(map,df1,"county")
+mapdata <- left_join(map,df1,"county") 
 # ----------------------
 
 # Create a custom theme
@@ -148,6 +152,8 @@ tabPanel("California Map",fluid = TRUE, icon = icon("map"),
                          min = min(mapdata$year),
                          max = max(mapdata$year),
                          value = c(min(mapdata$year), max(mapdata$year)), # how do we make this show up without columns???
+                         timeFormat = "%Y",
+                         ticks = T,
                          animate = T
              ) # End sliderInput
              
@@ -160,7 +166,7 @@ tabPanel("California Map",fluid = TRUE, icon = icon("map"),
          ) # End of sidebarLayout
 ), # End of tabPanel map
 
-tabPanel("Contaminant Statistics", fluid = T, icon = icon("stats"),
+tabPanel("Contaminant Statistics", fluid = T, icon = icon("table"),
          fluidRow(
            p("This table shows general statistics for each pollutant in a selected county at any time range.",
              style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250"),
@@ -183,8 +189,15 @@ tabPanel("Contaminant Statistics", fluid = T, icon = icon("stats"),
              
              hr(),
              fluidRow(column(3, verbatimTextOutput("value"))
-             ) # end selectInput fpr year
+             ), # end selectInput fpr year
              
+             checkboxGroupInput(inputId = "pick_contaminant",
+                                label = "Contaminant",
+                                choices = c("Bicarbonate Alkalinity" = "Bicarbonate Alkalinity", 
+                                            "Potassium" = "Potassium", 
+                                            "Nitrate" = "Nitrate"),
+                                selected = c("Bicarbonate Alkalinity", "Potassium", "Nitrate")
+                                ), # end checkboxGroup
            ), # End of sidebarPanel
            mainPanel(
              column(
@@ -254,15 +267,12 @@ server <- function(input,output) {
   ca_stat <- reactive({
     df1 %>%
       filter(county == input$pick_county,
-             year == input$pick_year)
+             year == input$pick_year,
+             gm_chemical_name == input$pick_contaminant)
   }) # end ca_stat reactive
   
   output$gw_stat <- renderTable({
     ca_stat() %>% 
-      # mutate(mean_gm_result = case_when(
-      #   mean_gm_result == "Bicarbonate Alkalinity (mg/l)" ~ "Bicarbonate Alkalinity",
-      #   mean_gm_result == "Potassium (mg/l)"  ~ "Potassium",
-      #   mean_gm_result == "Nitrate as N (mg/l)" ~ "Nitrate")) %>% 
       group_by(gm_chemical_name) %>%
       summarise(mean_gm_result = mean_gm_result) %>% 
       rename("Chemical Name" = "gm_chemical_name",
@@ -272,15 +282,3 @@ server <- function(input,output) {
 }
 
 shinyApp(ui=ui, server=server)
-
-
-# checkboxGroupInput(inputId = "gm_chemical_name", 
-#                    label = "Contaminants", 
-#                    choices = list("Bicarbonate Alkalinity" = "Bicarbonate Alkalinity (mg/l)", 
-#                                    "Potassium" = "Potassium (mg/l)", 
-#                                    "Nitrate" = "Nitrate as N (mg/l)"),
-#                    selected = 1),
-#  
-#  hr(),
-#  fluidRow(column(3, verbatimTextOutput("value"))
-#           ) # end checkboxGroup
