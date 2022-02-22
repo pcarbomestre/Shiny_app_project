@@ -35,7 +35,8 @@ ui <- fluidPage(theme="lumen",
                                            br(),
                                            br(),
                                            br(),
-                                           tags$img(src="WBlogo.png",width="120px"),align = "center",width=2),
+                                           tags$img(src="WBlogo.png",width="120px"),
+                                           align = "center",width=2),
                                     
                                     column(
                                       br(),
@@ -63,10 +64,8 @@ To attempt to mitigate contamination, California sets standards for Maximum Cont
                            
                            hr(),
                            p(em("Developed by"),br("S. Kaveh, T. Maggart & P. Carbó"),style="text-align:center"),
-                           fluidRow(column(DT::dataTableOutput("RawData"),
-                                           width = 12)),
                            hr()
-                  ),
+                  ), #End of main panel
                   
                   tabPanel("Temporal series",fluid = TRUE, icon = icon("chart-area"),
                            fluidRow(
@@ -171,7 +170,7 @@ server <- function(input,output) {
   map_reactive <- reactive({
     mapdata %>% 
       filter(gm_chemical_name %in% input$pick_pollutant_map) %>% 
-      filter(year == input$pick_year_map[1])
+      filter(year == input$pick_year_map)
   }) # end map_reactive
   
   output$gw_map <- renderPlot({

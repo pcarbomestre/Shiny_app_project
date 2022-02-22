@@ -2,7 +2,7 @@ library(stringr)
 library(tidyverse)
 library(usmap)
 
-
+# Pol map tests
 # Saving California Counties spatial data as dataframe from usmap package:
 map <- us_map("counties",
               include = c("CA")) %>% 
