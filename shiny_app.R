@@ -153,10 +153,50 @@ tabPanel("California Map",fluid = TRUE, icon = icon("map"),
              plotOutput(outputId = "gw_map", width = "150%"), width = 8)
            ) # End of mainPanel
          ) # End of sidebarLayout
-) # End of tabPanel map
+), # End of tabPanel map
 
-                ) # End of navbarPage
-) # end ui
+tabPanel("Contaminant Statistics", fluid = T, icon = icon("stats"),
+         fluidRow(
+           p("This table shows general statistics for each pollutant in a selected county at any time range.",
+             style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250"),
+         ),
+         sidebarLayout(
+           sidebarPanel(
+             "What do you want to represent?",
+             br(),
+             hr(),
+             selectInput(inputId = "pick_pollutant",
+                         label = "Select pollutant",
+                         choices = unique(df$gm_chemical_name),
+                         selected = "50 Free"
+             ), # End selectInput
+             
+             selectInput(inputId = "pick_county",
+                         label = "Select County",
+                         choices = unique(df$gm_gis_county),
+                         selected = "50 Free"
+             ), # End selectInput
+             
+             sliderInput(inputId = "pick_range",
+                         label = "Time range",
+                         min = min(df$date),
+                         max = max(df$date),
+                         value = c(min(df$date),max(df$date)),
+                         timeFormat = "%m/%Y",
+                         ticks = F
+             ) # End sliderInput
+           ), # End of sidebarPanel
+           mainPanel(
+             column(
+               "California Contaminant Statistics",
+               plotOutput(outputId = "stats", width = "150%"), width = 8)
+           ) # End of mainPanel
+         ) # End of sidebarLayout
+), # End of tabPanel statistics
+
+           ), # End of tabPanel
+           ) #end of navbarPage
+         ) # end of ui
 
 
 server <- function(input,output) {
