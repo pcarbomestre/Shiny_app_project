@@ -129,9 +129,9 @@ tabPanel("Temporal series",fluid = TRUE, icon = icon("chart-area"),
 
 tabPanel("California Map",fluid = TRUE, icon = icon("map"),
          fluidRow(
-             p("This tool explores annual contaminant averages across California counties. 
+           p("This tool explores annual contaminant averages across California counties. 
                                  The interface allows users to select the year of interest, and the resulting chloropleth map shows contaminant concentration across time throughout California.",
-               style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250")
+             style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250")
          ),
          sidebarLayout(
            sidebarPanel(
@@ -154,8 +154,8 @@ tabPanel("California Map",fluid = TRUE, icon = icon("map"),
            ), # End of sidebarPanel
            mainPanel(
              column(
-             "California Counties Map",
-             plotOutput(outputId = "gw_map", width = "150%"), width = 8)
+               "California Counties Map",
+               plotOutput(outputId = "gw_map", width = "150%"), width = 8)
            ) # End of mainPanel
          ) # End of sidebarLayout
 ), # End of tabPanel map
@@ -183,19 +183,19 @@ tabPanel("Contaminant Statistics", fluid = T, icon = icon("stats"),
              
              hr(),
              fluidRow(column(3, verbatimTextOutput("value"))
-                      ) # end selectInput fpr year
+             ) # end selectInput fpr year
              
            ), # End of sidebarPanel
            mainPanel(
              column(
                "California Contaminant Statistics",
                tableOutput(outputId ="gw_stat"), width = 8
-           ) # End of mainPanel
-         ) # End of sidebarLayout
-) # End of tabPanel statistics
-
+             ) # End of mainPanel
+           ) # End of sidebarLayout
+         ) # End of tabPanel statistics
+         
 ) # End of tabPanel
-) #end of navbarPage
+                ) #end of navbarPage
 )
 
 
@@ -249,21 +249,38 @@ server <- function(input,output) {
   
   ) # end output$gw_map
   
-## statistic table
+  ## statistic table
   ### the ui and reactives aren't interacting :/
-ca_stat <- reactive({
-  df1 %>%
-    filter(county == input$pick_county,
-           year == input$pick_year)
+  ca_stat <- reactive({
+    df1 %>%
+      filter(county == input$pick_county,
+             year == input$pick_year)
   }) # end ca_stat reactive
-
+  
   output$gw_stat <- renderTable({
     ca_stat() %>% 
+      # mutate(mean_gm_result = case_when(
+      #   mean_gm_result == "Bicarbonate Alkalinity (mg/l)" ~ "Bicarbonate Alkalinity",
+      #   mean_gm_result == "Potassium (mg/l)"  ~ "Potassium",
+      #   mean_gm_result == "Nitrate as N (mg/l)" ~ "Nitrate")) %>% 
       group_by(gm_chemical_name) %>%
-      summarise(mean_gm_result = mean_gm_result)
+      summarise(mean_gm_result = mean_gm_result) %>% 
+      rename("Chemical Name" = "gm_chemical_name",
+             "Mean Concentration (mg/L)" = "mean_gm_result") 
   }) ### end gw_stat
-
+  
 }
 
 shinyApp(ui=ui, server=server)
 
+
+# checkboxGroupInput(inputId = "gm_chemical_name", 
+#                    label = "Contaminants", 
+#                    choices = list("Bicarbonate Alkalinity" = "Bicarbonate Alkalinity (mg/l)", 
+#                                    "Potassium" = "Potassium (mg/l)", 
+#                                    "Nitrate" = "Nitrate as N (mg/l)"),
+#                    selected = 1),
+#  
+#  hr(),
+#  fluidRow(column(3, verbatimTextOutput("value"))
+#           ) # end checkboxGroup
