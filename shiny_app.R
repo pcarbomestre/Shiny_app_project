@@ -253,20 +253,14 @@ server <- function(input,output) {
   ### the ui and reactives aren't interacting :/
 ca_stat <- reactive({
   df1 %>%
-    filter(gm_gis_county == input$pick_county,
+    filter(county == input$pick_county,
            year == input$pick_year)
   }) # end ca_stat reactive
 
   output$gw_stat <- renderTable({
     ca_stat() %>% 
-      group_by(gm_gis_county, year) %>% 
-      summarise(mean_gm_result)
-    # %>% 
-    #   kable("html")%>% 
-    #   kable_styling(
-    #     full_width = F,
-    #     bootstrap_options = c("striped", "hover", "condensed")
-    #   )
+      group_by(gm_chemical_name) %>%
+      summarise(mean_gm_result = mean_gm_result)
   }) ### end gw_stat
 
 }
