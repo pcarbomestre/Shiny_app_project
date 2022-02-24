@@ -198,6 +198,7 @@ tabPanel("Contaminant Statistics", fluid = T, icon = icon("table"),
                                             "Nitrate" = "Nitrate"),
                                 selected = c("Bicarbonate Alkalinity", "Potassium", "Nitrate")
                                 ), # end checkboxGroup
+             
            ), # End of sidebarPanel
            mainPanel(
              column(
@@ -268,7 +269,7 @@ server <- function(input,output) {
     df1 %>%
       filter(county == input$pick_county,
              year == input$pick_year,
-             gm_chemical_name == input$pick_contaminant)
+             gm_chemical_name %in% input$pick_contaminant)
   }) # end ca_stat reactive
   
   output$gw_stat <- renderTable({
