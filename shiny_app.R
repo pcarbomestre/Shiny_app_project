@@ -66,7 +66,7 @@ p("For more information please check the",em("GAMA Groundwater information syste
 p("Data Citations:", style = "text-align: center; color: black; font-weight: bold"), 
 p("1. California State Water Resources Control Board, Ground Water - Water Quality Results (2022). Open Data Portal.",
   style="text-align:center;color:black"),
-p("2.",
+p("2. California Department of Water Resources, Periodic Groundwater Level Measurements (2022). California Natural Resources Agency.",
   style = "text-align: center; color: black"),
 width=6, align = "center"),
 
