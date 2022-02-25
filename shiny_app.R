@@ -60,6 +60,10 @@ tags$img(src="image.png",
          width="90%"),
 br(),
 br(),
+p("Data Citations: 
+  \n
+  California State Water Resources Control Board, Ground Water - Water Quality Results (2022). Open Data Portal.",
+  style="text-align:center;color:black"),
 p("For more information please check the",em("GAMA Groundwater information system"),"page clicking",
   a(href="https://data.ca.gov/dataset/ground-water-water-quality-results/resource/be2d189b-dcb7-4c1c-b881-a52b278cf0a7", "HERE",target="_blank"),
   style="text-align:center;color:black"),
@@ -199,7 +203,9 @@ tabPanel("Contaminant Statistics", fluid = T, icon = icon("table"),
                                             "Potassium" = "Potassium", 
                                             "Nitrate" = "Nitrate"),
                                 selected = c("Bicarbonate Alkalinity", "Potassium", "Nitrate")
-             ), # end checkboxGroup
+
+                                ), # end checkboxGroup
+
              
            ), # End of sidebarPanel
            mainPanel(
