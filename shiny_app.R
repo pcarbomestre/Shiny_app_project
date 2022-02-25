@@ -5,12 +5,17 @@ library(here)
 library(usmap)
 library(plotly)
 library(bslib)
+library(kableExtra)
 
 
 # Data input
 # ----------------------
 ## Time series data
-df <- read_csv(here("data","filtered_data.csv"), col_names = TRUE)
+df <- read_csv(here("data","filtered_data_2000_2020.csv"), col_names = TRUE) %>% 
+  mutate(gm_chemical_name = case_when(
+    gm_chemical_name == "Bicarbonate Alkalinity (mg/l)" ~ "Bicarbonate Alkalinity",
+    gm_chemical_name == "Potassium (mg/l)"  ~ "Potassium",
+    gm_chemical_name == "Nitrate as N (mg/l)" ~ "Nitrate"))
 
 ## Map data
 map <- us_map("counties",
@@ -20,9 +25,9 @@ map <- us_map("counties",
 df1 <- df %>% 
   mutate(county = str_to_title(gm_gis_county), .keep="unused") %>% 
   group_by(county, gm_chemical_name, year) %>% 
-  summarise(mean_gm_result=mean(mean_gm_result))
+  summarise(mean_gm_result=mean(mean_gm_result)) 
 
-mapdata <- left_join(map,df1,"county")
+mapdata <- left_join(map,df1,"county") 
 # ----------------------
 
 # Create a custom theme
@@ -58,7 +63,13 @@ br(),
 p("For more information please check the",em("GAMA Groundwater information system"),"page clicking",
   a(href="https://data.ca.gov/dataset/ground-water-water-quality-results/resource/be2d189b-dcb7-4c1c-b881-a52b278cf0a7", "HERE",target="_blank"),
   style="text-align:center;color:black"),
+p("Data Citations:", style = "text-align: center; color: black; font-weight: bold"), 
+p("1. California State Water Resources Control Board, Ground Water - Water Quality Results (2022). Open Data Portal.",
+  style="text-align:center;color:black"),
+p("2.",
+  style = "text-align: center; color: black"),
 width=6, align = "center"),
+
 
 column(br(),
        br(),
@@ -85,7 +96,7 @@ tabPanel("Temporal series",fluid = TRUE, icon = icon("chart-area"),
              p("This tool explores groundwater contaminants across California counties. 
                                The interface allows the user to select the relevant contaminant and the county of interest. 
                                The resulting figure explores monthly averages of the selected contaminant throughout time given the selected constraints.",
-               style="text-align:justify;color:black;background-color:gainsboro;padding:15px;border-radius:5px"),
+               style="text-align:justify;color:black;padding:15px;border-radius:5px; width: 1250px; align: center"),
              width=4)
          ),
          sidebarLayout(
@@ -124,11 +135,9 @@ tabPanel("Temporal series",fluid = TRUE, icon = icon("chart-area"),
 
 tabPanel("California Map",fluid = TRUE, icon = icon("map"),
          fluidRow(
-           column(
-             p("This tool explores annual contaminant averages across California counties. 
+           p("This tool explores annual contaminant averages across California counties. 
                                  The interface allows users to select the year of interest, and the resulting chloropleth map shows contaminant concentration across time throughout California.",
-               style="text-align:justify;color:black;background-color:gainsboro;padding:15px;border-radius:5px"),
-             width=4)
+             style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250")
          ),
          sidebarLayout(
            sidebarPanel(
@@ -144,21 +153,66 @@ tabPanel("California Map",fluid = TRUE, icon = icon("map"),
                          label = "Time range",
                          min = min(mapdata$year),
                          max = max(mapdata$year),
-                         value = min(mapdata$year),
-                         animate=T
+                         value = c(min(mapdata$year), max(mapdata$year)), # how do we make this show up without columns???
+                         timeFormat = "%Y",
+                         ticks = T,
+                         animate = T
              ) # End sliderInput
              
            ), # End of sidebarPanel
            mainPanel(
              column(
-             "California Counties Map",
-             plotOutput(outputId = "gw_map", width = "150%"), width = 8)
+               "California Counties Map",
+               plotOutput(outputId = "gw_map", width = "150%"), width = 8)
            ) # End of mainPanel
          ) # End of sidebarLayout
-) # End of tabPanel map
+), # End of tabPanel map
 
-                ) # End of navbarPage
-) # end ui
+tabPanel("Contaminant Statistics", fluid = T, icon = icon("table"),
+         fluidRow(
+           p("This table shows general statistics for each pollutant in a selected county at any time range.",
+             style="text-align:justify;color:black;padding:15px;border-radius:5px;align:center;width:1250"),
+         ),
+         sidebarLayout(
+           sidebarPanel(
+             "What do you want to represent?",
+             br(),
+             hr(),
+             selectInput(inputId = "pick_county",
+                         label = "Select County",
+                         choices = unique(df$gm_gis_county),
+                         selected = "50 Free"
+             ), # End selectInput
+             
+             selectInput(inputId = "pick_year", 
+                         label = ("Select Year"), 
+                         choices = list("Year" = c(min(df$year):max(df$year))),
+                         selected = 1),
+             
+             hr(),
+             fluidRow(column(3, verbatimTextOutput("value"))
+             ), # end selectInput fpr year
+             
+             checkboxGroupInput(inputId = "pick_contaminant",
+                                label = "Contaminant",
+                                choices = c("Bicarbonate Alkalinity" = "Bicarbonate Alkalinity", 
+                                            "Potassium" = "Potassium", 
+                                            "Nitrate" = "Nitrate"),
+                                selected = c("Bicarbonate Alkalinity", "Potassium", "Nitrate")
+             ), # end checkboxGroup
+             
+           ), # End of sidebarPanel
+           mainPanel(
+             column(
+               "California Contaminant Statistics",
+               tableOutput(outputId ="gw_stat"), width = 8
+             ) # End of mainPanel
+           ) # End of sidebarLayout
+         ) # End of tabPanel statistics
+         
+) # End of tabPanel
+                ) #end of navbarPage
+)
 
 
 server <- function(input,output) {
@@ -174,10 +228,11 @@ server <- function(input,output) {
   output$gw_plot <- renderPlot(
     ggplot(data=gw_reactive(),aes(x=date,y=mean_gm_result)) +
       geom_area( fill="#FBC7D4", alpha=0.4) +
-      geom_line(color="#ff7f50", size=1.5) +
-      geom_point(size=2, color="#ff7f50") +
+      geom_line(color="#f6809d", size=1) +
+      geom_point(size=1, color="#f6809d") +
       labs(y ="mg/l", x = "Years") +
-      theme_minimal()
+      theme_minimal() +
+      labs(caption = "Data from CA State Water Resources Control Board.")
   ) # end output$gw_plot
   
   ## Map 
@@ -194,6 +249,7 @@ server <- function(input,output) {
       coord_fixed(ratio = 1) +
       scale_fill_continuous("mg/l",trans = 'reverse') +
       scale_fill_gradient(low = "#FBC7D4", high = "#9796F0") +
+      labs(caption = "Data from CA State Water Resources Control Board.") +
       theme(axis.line=element_blank(),
             axis.text.x=element_blank(),
             axis.text.y=element_blank(),
@@ -209,7 +265,23 @@ server <- function(input,output) {
   
   ) # end output$gw_map
   
+  ## statistic table
+  ### the ui and reactives aren't interacting :/
+  ca_stat <- reactive({
+    df1 %>%
+      filter(county == input$pick_county,
+             year == input$pick_year,
+             gm_chemical_name %in% input$pick_contaminant)
+  }) # end ca_stat reactive
+  
+  output$gw_stat <- renderTable({
+    ca_stat() %>% 
+      group_by(gm_chemical_name) %>%
+      summarise(mean_gm_result = mean_gm_result) %>% 
+      rename("Chemical Name" = "gm_chemical_name",
+             "Mean Concentration (mg/L)" = "mean_gm_result") 
+  }) ### end gw_stat
+  
 }
 
 shinyApp(ui=ui, server=server)
-
